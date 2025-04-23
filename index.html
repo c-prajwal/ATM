@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ATM Machine</title>
+  <style>
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #1a1a1a;
+      color: #0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .atm-container {
+      background-color: #333;
+      border: 5px solid #0f0;
+      padding: 30px;
+      max-width: 600px;
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 0 20px #0f0;
+      box-sizing: border-box;
+    }
+    .screen {
+      background-color: #000;
+      color: #0f0;
+      padding: 20px;
+      border: 2px solid #0f0;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      display: none;
+    }
+    input, button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    input {
+      background-color: #222;
+      color: #0f0;
+    }
+    button {
+      background-color: #0f0;
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #1aff1a;
+    }
+    .cancel-button {
+      background-color: #ff0000;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="atm-container">
+    <div class="screen" id="insertCardScreen">
+      <div>Please insert your card...</div>
+      <button onclick="showAuthenticateScreen()">Insert Card</button>
+    </div>
+
+    <div class="screen" id="authenticateScreen">
+      <div>Enter your name, card number, and CVV:</div>
+      <input type="text" id="name" placeholder="Enter your name" />
+      <input type="text" id="cardNumber" placeholder="Enter card number" />
+      <input type="password" id="cvv" placeholder="Enter CVV" />
+      <button onclick="authenticate()">Submit</button>
+      <button onclick="cancelTransaction()">Cancel</button>
+    </div>
+
+    <div class="screen" id="pinScreen">
+      <div>Please enter your PIN:</div>
+      <input type="password" id="pinInput" placeholder="Enter your PIN" />
+      <button onclick="checkPin()">Submit</button>
+      <button onclick="cancelTransaction()">Cancel</button>
+    </div>
+
+    <div class="screen" id="accountScreen">
+      <div>Select your account type:</div>
+      <button onclick="showAccountOptions('Savings')">Savings Account</button>
+      <button onclick="showAccountOptions('Checking')">Checking Account</button>
+      <button onclick="cancelTransaction()">Cancel</button>
+    </div>
+
+    <div class="screen" id="accountOptionsScreen">
+      <div>Select an action:</div>
+      <button onclick="viewBalance()">View Balance</button>
+      <button onclick="showWithdrawScreen()">Withdraw</button>
+      <button onclick="changePin()">Change PIN</button>
+      <button onclick="showDepositScreen()">Deposit</button>
+      <button onclick="cancelTransaction()">Cancel</button>
+    </div>
+
+    <div class="screen" id="withdrawScreen">
+      <div>Enter the amount to withdraw:</div>
+      <input type="number" id="amount" placeholder="Amount to withdraw" />
+      <button onclick="confirmWithdraw()">Confirm Withdraw</button>
+      <button onclick="cancelTransaction()">Cancel</button>
+    </div>
+
+    <div class="screen" id="depositScreen">
+      <div>Enter the amount to deposit:</div>
+      <input type="number" id="depositAmount" placeholder="Amount to deposit" />
+      <button onclick="confirmDeposit()">Confirm Deposit</button>
+      <button onclick="cancelTransaction()">Cancel</button>
+    </div>
+
+    <div class="screen" id="transactionScreen">
+      <div>Transaction successful!</div>
+      <button onclick="exitATM()">Exit</button>
+    </div>
+
+    <div class="screen" id="exitScreen">
+      <div>Thank you for using the ATM. Please take your card.</div>
+    </div>
+  </div>
+
+  <script>
+    let balance = 1000;
+    let pin = "1234";
+    let enteredPin = "";
+    let accountType = "";
+    let amount = 0;
+
+    document.getElementById('insertCardScreen').style.display = 'block';
+
+    function showAuthenticateScreen() {
+      document.getElementById('insertCardScreen').style.display = 'none';
+      document.getElementById('authenticateScreen').style.display = 'block';
+    }
+
+    function authenticate() {
+      const name = document.getElementById('name').value;
+      const card = document.getElementById('cardNumber').value;
+      const cvv = document.getElementById('cvv').value;
+
+      if (!name || !card || !cvv) {
+        alert("All fields are required.");
+        return;
+      }
+
+      document.getElementById('authenticateScreen').style.display = 'none';
+      document.getElementById('pinScreen').style.display = 'block';
+    }
+
+    function checkPin() {
+      enteredPin = document.getElementById('pinInput').value;
+      if (enteredPin !== pin) {
+        alert("Incorrect PIN.");
+        return;
+      }
+
+      document.getElementById('pinScreen').style.display = 'none';
+      document.getElementById('accountScreen').style.display = 'block';
+    }
+
+    function showAccountOptions(type) {
+      accountType = type;
+      document.getElementById('accountScreen').style.display = 'none';
+      document.getElementById('accountOptionsScreen').style.display = 'block';
+    }
+
+    function viewBalance() {
+      alert("Current Balance: $" + balance);
+    }
+
+    function showWithdrawScreen() {
+      document.getElementById('accountOptionsScreen').style.display = 'none';
+      document.getElementById('withdrawScreen').style.display = 'block';
+    }
+
+    function confirmWithdraw() {
+      amount = parseFloat(document.getElementById('amount').value);
+      if (isNaN(amount) || amount <= 0) {
+        alert("Enter a valid amount.");
+        return;
+      }
+
+      if (amount > balance) {
+        alert("Insufficient balance.");
+        return;
+      }
+
+      balance -= amount;
+      sendTransactionData('Withdraw', amount);
+
+      document.getElementById('withdrawScreen').style.display = 'none';
+      document.getElementById('transactionScreen').style.display = 'block';
+    }
+
+    function showDepositScreen() {
+      document.getElementById('accountOptionsScreen').style.display = 'none';
+      document.getElementById('depositScreen').style.display = 'block';
+    }
+
+    function confirmDeposit() {
+      amount = parseFloat(document.getElementById('depositAmount').value);
+      if (isNaN(amount) || amount <= 0) {
+        alert("Enter a valid amount.");
+        return;
+      }
+
+      balance += amount;
+      sendTransactionData('Deposit', amount);
+
+      document.getElementById('depositScreen').style.display = 'none';
+      document.getElementById('transactionScreen').style.display = 'block';
+    }
+
+    function sendTransactionData(action, amount) {
+      const transactionData = {
+        name: document.getElementById('name').value,
+        cardNumber: document.getElementById('cardNumber').value,
+        accountType: accountType,
+        action: action,
+        amount: amount || ''
+      };
+
+      console.log("Sending data:", transactionData);  // Debugging line
+
+      fetch('https://script.google.com/macros/s/AKfycbxuPGR-PLf_LCwBW8NOxvqdHTec_ZeN1J137bYV_94q7pTbUcBX9Yrqg3QMYyscr6jt/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(transactionData),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Transaction recorded:', data);  // Logs the success message from Google Sheets
+      })
+      .catch(error => {
+        console.error('Error logging transaction:', error);  // Logs any errors
+      });
+    }
+
+    function exitATM() {
+      document.getElementById('transactionScreen').style.display = 'none';
+      document.getElementById('exitScreen').style.display = 'block';
+      setTimeout(() => {
+        document.getElementById('exitScreen').style.display = 'none';
+        document.getElementById('insertCardScreen').style.display = 'block';
+      }, 3000);
+    }
+
+    function cancelTransaction() {
+      alert("Transaction cancelled.");
+      window.location.reload();
+    }
+
+    function changePin() {
+      alert("PIN change functionality not implemented yet.");
+    }
+  </script>
+</body>
+</html>
